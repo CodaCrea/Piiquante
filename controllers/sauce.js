@@ -1,9 +1,8 @@
 const Sauce = require('../models/Sauce');
 const fs = require('fs');
-const { modelName } = require('../models/Sauce');
 
 exports.createSauce = async (req, res) => {
-  const product = JSON.parse(req.body.thing);
+  const product = JSON.parse(req.body.string);
   try {
     delete product._id;
     delete product._userId;
@@ -22,34 +21,11 @@ exports.createSauce = async (req, res) => {
   }
 };
 
-exports.createQuote = async (req, res) => {
+exports.likeQuote = async (req, res) => {
   try {
-    const sauce = new Sauce;
-    const userQuote = {
-      userId: req.auth.userId,
-      usersLiked: sauce.usersLiked,
-      usersDisliked: sauce.usersDisliked,
-      like: sauce.likes,
-      dislike: sauce.dislikes
-    };
-    if (userQuote !== req.auth.userId) {
-      throw new Error(
-        `Vous n'êtes pas connecté ${res.status(400)}`
-      );
-    } else {
-      const user = userQuote.userId;
-      const quoteId = userQuote.usersLiked;
-      const likes = userQuote.like;
-      const dislikes = userQuote.dislike;
-      if (likes === likes++) {
-        likes++;
-        user.push(quoteId);
-      } else if (likes === likes--) {
-        likes--;
-        user.slice(quoteId);
-        user.push(dislikes);
-      }
-    }
+    Sauce.findOne({
+      _id: req.params.id
+    });
   } catch (error) {
     res.status(500).json({ error });
   }
@@ -57,7 +33,7 @@ exports.createQuote = async (req, res) => {
 
 exports.modifySauce = async (req, res) => {
   const product = req.file ? {
-    ...JSON.parse(req.body.thing),
+    ...JSON.parse(req.body.string),
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   } : { ...req.body };
   try {
