@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const sauceRoute = require('./routes/sauce');
 const userRoute = require('./routes/user');
+const path = require('path');
 const app = express();
 require('dotenv').config();
 
@@ -22,6 +24,8 @@ app.use('/api/auth', (req, res, next) => {
   next();
 });
 
+app.use('/api/sauces', sauceRoute);
 app.use('/api/auth', userRoute);
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 module.exports = app;
