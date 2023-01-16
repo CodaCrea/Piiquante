@@ -2,10 +2,10 @@ const Sauce = require('../models/Sauce');
 const fs = require('fs');
 
 exports.createSauce = async (req, res) => {
-  const product = JSON.parse(req.body.string);
+  const productObject = JSON.parse(req.body.product);
   try {
-    delete product._id;
-    delete product._userId;
+    delete productObject._id;
+    delete productObject._userId;
     const sauce = new Sauce({
       ...product,
       userId: req.auth.userId,
@@ -32,13 +32,13 @@ exports.likeQuote = async (req, res) => {
 };
 
 exports.modifySauce = async (req, res) => {
-  const product = req.file ? {
-    ...JSON.parse(req.body.string),
+  const productObject = req.file ? {
+    ...JSON.parse(req.body.product),
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   } : { ...req.body };
   try {
     const sauceId = await Sauce.findOne({ _id: req.params.id });
-    delete product._userId;
+    delete productObject._userId;
     if (sauceId.userId != req.auth.userId) {
       throw new Error(
         `Vous n'êtes pas autorisé ${res.status(400)}`
@@ -48,7 +48,7 @@ exports.modifySauce = async (req, res) => {
       _id: req.params.id
     },
       {
-        ...product, _id: req.params.id
+        ...productObject, _id: req.params.id
       });
     if (result) {
       return res.status(200).json({ message: 'Sauce modifié' });
