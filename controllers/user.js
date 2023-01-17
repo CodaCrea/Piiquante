@@ -9,9 +9,9 @@ exports.signup = async (req, res) => {
       email: req.body.email,
       password: hash,
     });
-    const ret = await user.save();
-    console.log(ret);
-    if (ret) {
+    const result = await user.save();
+    console.log(result);
+    if (result) {
       res.status(201).json({ message: "Utilisateur créé" });
     } else {
       const error = {
@@ -27,7 +27,7 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
-    const valid = await bcrypt.compare(res.body.password, user.password);
+    const valid = await bcrypt.compare(req.body.password, user.password);
     if (!user || !valid) {
       throw new Error(`email ou mot de passe incorrect ${res.status(401)}`);
     } else {

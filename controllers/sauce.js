@@ -21,11 +21,25 @@ exports.createSauce = async (req, res) => {
   }
 };
 
-exports.likeQuote = async (req, res) => {
+exports.quoteSauce = async (req, res) => {
   try {
-    Sauce.findOne({
+    const sauceId = await Sauce.findOne({
       _id: req.params.id
     });
+    if (sauceId.usersLiked.includes(req.auth.userId)) {
+      Sauce.updateOne({
+        id: req.params.id
+      },
+        {
+
+        });
+    } else if (sauceId.usersDisliked.includes(req.auth.userId)) {
+
+    } else {
+      throw new Error(
+        `Vous n'êtes pas autorisé ${res.status(400)}`
+      );
+    }
   } catch (error) {
     res.status(500).json({ error });
   }
