@@ -2,16 +2,16 @@ const Sauce = require('../models/Sauce');
 const fs = require('fs');
 
 exports.createSauce = async (req, res) => {
-  const productObject = JSON.parse(req.body.product);
+  const productObject = JSON.parse(req.body.sauce);
   try {
     delete productObject._id;
     delete productObject._userId;
-    const sauce = new Sauce({
-      ...product,
+    const addSauce = new Sauce({
+      ...productObject,
       userId: req.auth.userId,
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
-    const result = await sauce.save();
+    const result = await addSauce.save();
     if (result) {
       res.status(201).json({ message: 'Sauce ajouté' });
     }
@@ -26,15 +26,82 @@ exports.quoteSauce = async (req, res) => {
     const sauceId = await Sauce.findOne({
       _id: req.params.id
     });
-    if (sauceId.usersLiked.includes(req.auth.userId)) {
-      Sauce.updateOne({
-        id: req.params.id
-      },
-        {
+    console.log(sauceId);
 
-        });
-    } else if (sauceId.usersDisliked.includes(req.auth.userId)) {
+    if (req.auth.userId) {
+      if (req.body.likes === 1) {
+        if (sauceId.usersLiked.includes(req.auth.userId)) {
+          throw new Error(
+            `Cette sauce a déjà un like ${res.status(401)}`
+          );
+        }
+        const sauceUpdateLike = await Sauce.updateOne({
+          _id: req.params.id
+        },
+          {
+            likes: req.body.likes++
+          },
+          {
+            usersLiked: req.body.userId
+          });
+        if (sauceUpdateLike) {
+          sauceId.usersLiked.save();
+          sauceId.usersDisliked.splice();
+          return res.status(200).json({ message: "Like ajouté" });
+        }
 
+      } else if (req.body.likes === -1) {
+        if (sauceId.usersDisliked.includes(req.auth.userId)) {
+          throw new Error(
+            `Cette sauce a déjà un disLike ${res.status(401)}`
+          );
+        }
+        const sauceUpdateDislike = await Sauce.updateOne({
+          _id: req.params.id
+        },
+          {
+            dislikes: req.body.likes++
+          },
+          {
+            usersDisliked: req.body.userId
+          });
+        if (sauceUpdateDislike) {
+          sauceId.usersDisliked.save();
+          sauceId.usersLiked.splice();
+          return res.status(200).json({ message: "Dislike ajouté" });
+        }
+
+      } else {
+        if (sauceId.usersLiked.includes(req.auth.userId)) {
+          const sauceDeleteLike = await Sauce.updateOne({
+            _id: req.params.id
+          },
+            {
+              likes: -1
+            },
+            {
+              usersLiked: req.body.userId
+            });
+          if (sauceDeleteLike) {
+            sauceId.usersLiked.splice();
+            return res.status(200).json({ message: "Like Supprimé" });
+          }
+        } else if (sauceId.usersDisliked.includes(req.auth.userId)) {
+          const sauceDeleteDislike = await Sauce.updateOne({
+            _id: req.params.id
+          },
+            {
+              dislikes: -1
+            },
+            {
+              usersDisliked: req.body.userId
+            });
+          if (sauceDeleteDislike) {
+            sauceId.usersDisliked.splice();
+            return res.status(200).json({ message: "Dislike Supprimé" });
+          }
+        }
+      }
     } else {
       throw new Error(
         `Vous n'êtes pas autorisé ${res.status(400)}`
