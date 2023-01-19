@@ -3,9 +3,8 @@ const fs = require('fs');
 
 exports.createSauce = async (req, res) => {
   const productObject = JSON.parse(req.body.sauce);
+  console.log(productObject);
   try {
-    delete productObject._id;
-    delete productObject._userId;
     const addSauce = new Sauce({
       ...productObject,
       userId: req.auth.userId,
@@ -23,89 +22,80 @@ exports.createSauce = async (req, res) => {
 
 exports.quoteSauce = async (req, res) => {
   try {
-    const sauceId = await Sauce.findOne({
-      _id: req.params.id
-    });
-    console.log(sauceId);
+    // Je cherche l'ID de la sauce sélectionnée
+    const sauceId = await Sauce.findOne({ _id: req.params.id });
 
-    if (req.auth.userId) {
-      if (req.body.likes === 1) {
-        if (sauceId.usersLiked.includes(req.auth.userId)) {
-          throw new Error(
-            `Cette sauce a déjà un like ${res.status(401)}`
-          );
-        }
-        const sauceUpdateLike = await Sauce.updateOne({
-          _id: req.params.id
-        },
-          {
-            likes: req.body.likes++
-          },
-          {
-            usersLiked: req.body.userId
-          });
-        if (sauceUpdateLike) {
-          sauceId.usersLiked.save();
-          sauceId.usersDisliked.splice();
-          return res.status(200).json({ message: "Like ajouté" });
-        }
-
-      } else if (req.body.likes === -1) {
-        if (sauceId.usersDisliked.includes(req.auth.userId)) {
-          throw new Error(
-            `Cette sauce a déjà un disLike ${res.status(401)}`
-          );
-        }
-        const sauceUpdateDislike = await Sauce.updateOne({
-          _id: req.params.id
-        },
-          {
-            dislikes: req.body.likes++
-          },
-          {
-            usersDisliked: req.body.userId
-          });
-        if (sauceUpdateDislike) {
-          sauceId.usersDisliked.save();
-          sauceId.usersLiked.splice();
-          return res.status(200).json({ message: "Dislike ajouté" });
-        }
-
-      } else {
-        if (sauceId.usersLiked.includes(req.auth.userId)) {
-          const sauceDeleteLike = await Sauce.updateOne({
-            _id: req.params.id
-          },
+    // J'évalue le like du corp de la requête avec "switch"
+    switch (req.body.like) {
+      // Dans le cas 0, je gère le retrait des votes "likes" et "dislikes"
+      case 0:
+        // Je cherche si l'utilisateur est déjà dans "usersLiked"
+        if (sauceId.usersLiked.find((user) => user === req.body.userId)) {
+          await Sauce.updateOne(
             {
-              likes: -1
+              _id: req.params.id
             },
             {
-              usersLiked: req.body.userId
-            });
-          if (sauceDeleteLike) {
-            sauceId.usersLiked.splice();
-            return res.status(200).json({ message: "Like Supprimé" });
-          }
-        } else if (sauceId.usersDisliked.includes(req.auth.userId)) {
-          const sauceDeleteDislike = await Sauce.updateOne({
+              /**
+               * Si oui, je met à jour la sauce avec le _id présent dans la requête
+               * Je retire la valeur des likes de 1
+              */
+              $inc: { likes: -1 },
+              // Je retire l'utilisateur de "usersLiked"
+              $pull: { usersLiked: req.body.userId },
+            }
+          );
+          res.status(201).json({ message: "vote retiré." });
+        }
+        if (sauceId.usersDisliked.find((user) => user === req.body.userId)) {
+          // Mêmes principes que précédemment dans "usersDisliked"
+          await Sauce.updateOne(
+            { _id: req.params.id },
+            {
+              $inc: { dislikes: -1 },
+              $pull: { usersDisliked: req.body.userId },
+            }
+          );
+          res.status(201).json({ message: "vote retiré." });
+        }
+        break;
+
+      // Dans le cas 1, je gère le vote des "likes"
+      case 1:
+        // Je cherche la sauce avec le _id présent dans la requête
+        await Sauce.updateOne(
+          {
             _id: req.params.id
           },
-            {
-              dislikes: -1
-            },
-            {
-              usersDisliked: req.body.userId
-            });
-          if (sauceDeleteDislike) {
-            sauceId.usersDisliked.splice();
-            return res.status(200).json({ message: "Dislike Supprimé" });
+          {
+            // (Incrémentation) J'ajoute la valeur de "likes" par 1
+            $inc: { likes: 1 },
+            // J'ajoute l'utilisateur dans "usersLiked"
+            $push: { usersLiked: req.body.userId },
           }
-        }
-      }
-    } else {
-      throw new Error(
-        `Vous n'êtes pas autorisé ${res.status(400)}`
-      );
+        );
+        res.status(201).json({ message: "vote enregistré." });
+        break;
+
+      //  Dans le cas -1, je gère le vote des "dislikes"
+      case -1:
+        await Sauce.updateOne(
+          // Je cherche la sauce avec le _id présent dans la requête
+          {
+            _id: req.params.id
+          },
+          {
+            // (Incrémentation) J'ajoute la valeur de "dislikes" par 1
+            $inc: { dislikes: 1 },
+            // J'ajoute l'utilisateur dans "usersDisliked".
+            $push: { usersDisliked: req.body.userId },
+          }
+        );
+        res.status(201).json({ message: "vote enregistré." });
+        break;
+      // J'ajoute une sortie par défaut s'il n'y a aucune correspondance aux cas
+      default:
+        res.status(400).json({ message: "bad request" });
     }
   } catch (error) {
     res.status(500).json({ error });
@@ -119,11 +109,8 @@ exports.modifySauce = async (req, res) => {
   } : { ...req.body };
   try {
     const sauceId = await Sauce.findOne({ _id: req.params.id });
-    delete productObject._userId;
     if (sauceId.userId != req.auth.userId) {
-      throw new Error(
-        `Vous n'êtes pas autorisé ${res.status(400)}`
-      );
+      res.status(403).json({ error: "Invalid user ID" });
     }
     const result = await Sauce.updateOne({
       _id: req.params.id
@@ -132,7 +119,7 @@ exports.modifySauce = async (req, res) => {
         ...productObject, _id: req.params.id
       });
     if (result) {
-      return res.status(200).json({ message: 'Sauce modifié' });
+      res.status(200).json({ message: 'Sauce modifié' });
     }
   } catch (error) {
     res.status(400).json({ error });
@@ -143,9 +130,7 @@ exports.deleteSauce = async (req, res) => {
   try {
     const result = await Sauce.findOne({ _id: req.params.id });
     if (result.userId != req.auth.userId) {
-      throw new Error(
-        `Vous n'êtes pas autorisé ${res.status(400)}`
-      );
+      res.status(403).json({ error: "Invalid user ID" });
     } else {
       const fileName = result.imageUrl.split('/images/')[1];
       fs.unlink(`images/${fileName}`, () => {

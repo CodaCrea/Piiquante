@@ -27,9 +27,12 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
     const valid = await bcrypt.compare(req.body.password, user.password);
-    if (!user || !valid) {
-      throw new Error(`email ou mot de passe incorrect ${res.status(401)}`);
+    if (!valid) {
+      return res.status(401).json({ error: "Password invalid" });
     } else {
       res.status(200).json({
         userId: user._id,
