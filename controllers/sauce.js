@@ -1,16 +1,20 @@
 const Sauce = require('../models/Sauce');
 const fs = require('fs');
 
+
 exports.createSauce = async (req, res) => {
+  // Récupération de la création en objet.
   const productObject = JSON.parse(req.body.sauce);
   console.log(productObject);
   try {
+    // Je créé un nouvel objet en récupérant toutes ces informations, l'Id utilisateur et l'image.
     const addSauce = new Sauce({
       ...productObject,
       userId: req.auth.userId,
       imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
     const result = await addSauce.save();
+    // S'il y a un résultat je signal un succès, la publication est enregistrée.
     if (result) {
       res.status(201).json({ message: 'Sauce ajouté' });
     }
@@ -80,7 +84,7 @@ exports.quoteSauce = async (req, res) => {
       //  Dans le cas -1, je gère le vote des "dislikes"
       case -1:
         await Sauce.updateOne(
-          // Je cherche la sauce avec le _id présent dans la requête
+          // Je recherche la sauce avec le _id présent dans la requête
           {
             _id: req.params.id
           },
@@ -108,16 +112,21 @@ exports.modifySauce = async (req, res) => {
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   } : { ...req.body };
   try {
+    // Je recherche l'Id de la sauce en utilisant le paramètre de l'URL.
     const sauceId = await Sauce.findOne({ _id: req.params.id });
+    // Je vérifie si l'utilisateur est différent à l'utilisateur qui a publié la sauce.
     if (sauceId.userId != req.auth.userId) {
+      // Si c'est le cas je signal une erreur.
       res.status(403).json({ error: "Invalid user ID" });
     }
+    // Je met à jour la sauce qui doit être mise à jour en utilisant le paramètre de l'URL.
     const result = await Sauce.updateOne({
       _id: req.params.id
     },
       {
         ...productObject, _id: req.params.id
       });
+    // S'il y a un résultat je signal un succès.
     if (result) {
       res.status(200).json({ message: 'Sauce modifié' });
     }
@@ -128,16 +137,22 @@ exports.modifySauce = async (req, res) => {
 
 exports.deleteSauce = async (req, res) => {
   try {
+    // Je recherche l'Id de la sauce en utilisant le paramètre de l'URL.
     const result = await Sauce.findOne({ _id: req.params.id });
+    // Je vérifie si l'utilisateur est différent à l'utilisateur qui a publié la sauce.
     if (result.userId != req.auth.userId) {
+      // Si c'est le cas je signal une erreur.
       res.status(403).json({ error: "Invalid user ID" });
     } else {
+      // Sinon je supprime l'image du dossier "images", puis la publication.
       const fileName = result.imageUrl.split('/images/')[1];
       fs.unlink(`images/${fileName}`, () => {
         result.deleteOne({ _id: req.params.id });
+        // Je signal un succès.
         res.status(200).json({ message: 'Sauce supprimé' });
+        // Si aucune image est a supprimer je signal une erreur.
         if (!fileName) {
-          return res.status(401).json({ error });
+          res.status(401).json({ error });
         }
       });
     }
@@ -147,12 +162,14 @@ exports.deleteSauce = async (req, res) => {
 };
 
 exports.getOneSauce = async (req, res) => {
+  // Je recherche l'Id de la sauce en utilisant le paramètre de l'URL.
   const result = await Sauce.findOne({
     _id: req.params.id
   });
   try {
+    // S'il y a un résultat je signal un succès.
     if (result) {
-      return res.status(200).json(result);
+      res.status(200).json(result);
     }
   }
   catch (error) {
@@ -161,10 +178,12 @@ exports.getOneSauce = async (req, res) => {
 };
 
 exports.getAllSauce = async (req, res) => {
+  // Je recherche toutes les sauces.
   const result = await Sauce.find();
   try {
+    // S'il y a un résultat je signal un succès.
     if (result) {
-      return res.status(200).json(result);
+      res.status(200).json(result);
     }
   } catch (error) {
     res.status(400).json({ error });
