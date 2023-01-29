@@ -5,7 +5,6 @@ const fs = require('fs');
 exports.createSauce = async (req, res) => {
   // Récupération de la création en objet.
   const productObject = JSON.parse(req.body.sauce);
-  console.log(productObject);
   try {
     // Je créé un nouvel objet en récupérant toutes ces informations, l'Id utilisateur et l'image.
     const addSauce = new Sauce({
@@ -108,7 +107,7 @@ exports.quoteSauce = async (req, res) => {
 
 exports.modifySauce = async (req, res) => {
   const productObject = req.file ? {
-    ...JSON.parse(req.body.product),
+    ...JSON.parse(req.body.sauce),
     imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
   } : { ...req.body };
   try {

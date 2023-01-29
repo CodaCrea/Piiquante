@@ -1,5 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
 const sauceRoute = require('./routes/sauce');
 const userRoute = require('./routes/user');
 const path = require('path');
@@ -27,9 +29,11 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(helmet());
+app.use(mongoSanitize({ replaceWith: '_' }));
 // Les routes des sauces, de l'authentification et la sauvegarde d'images dans le dossier "images".
 app.use('/api/sauces', sauceRoute);
 app.use('/api/auth', userRoute);
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/images', express.static(path.join(__dirname, 'image')));
 
 module.exports = app;
