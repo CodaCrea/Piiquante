@@ -9,11 +9,10 @@ const MIME_TYPES = {
 const maxSize = 1 * 1024 * 1024;
 const imageFilter = (req, file, callback) => {
   if (file.mimetype.startsWith('image')) {
-    callback("Valide", true);
+    callback(null, true);
   } else {
-    callback("Ne télécharger que des images", false);
+    callback("Only upload images", false);
   }
-  console.log(callback);
 };
 // "diskStorage" configure le chemin et le nom de fichier pour les fichiers entrants
 const storage = multer.diskStorage({
@@ -23,7 +22,6 @@ const storage = multer.diskStorage({
   filename: (req, file, callback) => {
     const name = file.originalname.split(' ').join('_');
     const cleanName = name.split('.');
-    console.log(cleanName);
     const extension = MIME_TYPES[file.mimetype];
     callback(null, cleanName[0] + Date.now() + '.' + extension);
   }

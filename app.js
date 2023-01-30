@@ -15,11 +15,12 @@ mongoose.set('strictQuery', true),
       useNewUrlParser: true,
       useUnifiedTopology: true
     })
-    .then(() => console.log('Connexion établie à MongoDB'))
-    .catch(() => console.log('Erreur de connexion à MongoDB'));
+    .then(() => console.log('Connection established at MongoDB'))
+    .catch(() => console.log('Error connecting to MongoDB'));
 
 // "express.json" analyse les requêtes "JSON" entrantes et place les données analysées dans le corp de la requête.
 app.use(express.json());
+app.use(helmet());
 
 // Réponse des en-têtes.
 app.use((req, res, next) => {
@@ -29,11 +30,10 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(helmet());
 app.use(mongoSanitize({ replaceWith: '_' }));
 // Les routes des sauces, de l'authentification et la sauvegarde d'images dans le dossier "images".
 app.use('/api/sauces', sauceRoute);
 app.use('/api/auth', userRoute);
-app.use('/images', express.static(path.join(__dirname, 'image')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 module.exports = app;

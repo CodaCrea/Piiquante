@@ -15,7 +15,7 @@ exports.createSauce = async (req, res) => {
     const result = await addSauce.save();
     // S'il y a un résultat je signal un succès, la publication est enregistrée.
     if (result) {
-      res.status(201).json({ message: 'Sauce ajouté' });
+      res.status(201).json({ message: 'Sauce added' });
     }
   }
   catch (error) {
@@ -48,7 +48,7 @@ exports.quoteSauce = async (req, res) => {
               $pull: { usersLiked: req.body.userId },
             }
           );
-          res.status(201).json({ message: "vote retiré." });
+          res.status(201).json({ message: "Vote withdrawn" });
         }
         if (sauceId.usersDisliked.find((user) => user === req.body.userId)) {
           // Mêmes principes que précédemment dans "usersDisliked"
@@ -59,7 +59,7 @@ exports.quoteSauce = async (req, res) => {
               $pull: { usersDisliked: req.body.userId },
             }
           );
-          res.status(201).json({ message: "vote retiré." });
+          res.status(201).json({ message: "Vote withdrawn" });
         }
         break;
 
@@ -77,7 +77,7 @@ exports.quoteSauce = async (req, res) => {
             $push: { usersLiked: req.body.userId },
           }
         );
-        res.status(201).json({ message: "vote enregistré." });
+        res.status(201).json({ message: "Recorded vote" });
         break;
 
       //  Dans le cas -1, je gère le vote des "dislikes"
@@ -94,11 +94,11 @@ exports.quoteSauce = async (req, res) => {
             $push: { usersDisliked: req.body.userId },
           }
         );
-        res.status(201).json({ message: "vote enregistré." });
+        res.status(201).json({ message: "Recorded vote" });
         break;
       // J'ajoute une sortie par défaut s'il n'y a aucune correspondance aux cas
       default:
-        res.status(400).json({ message: "bad request" });
+        res.status(400).json({ message: "Bad request" });
     }
   } catch (error) {
     res.status(500).json({ error });
@@ -127,7 +127,7 @@ exports.modifySauce = async (req, res) => {
       });
     // S'il y a un résultat je signal un succès.
     if (result) {
-      res.status(200).json({ message: 'Sauce modifié' });
+      res.status(200).json({ message: "modified sauce" });
     }
   } catch (error) {
     res.status(400).json({ error });
@@ -148,7 +148,7 @@ exports.deleteSauce = async (req, res) => {
       fs.unlink(`images/${fileName}`, () => {
         result.deleteOne({ _id: req.params.id });
         // Je signal un succès.
-        res.status(200).json({ message: 'Sauce supprimé' });
+        res.status(200).json({ message: "Sauce removed" });
         // Si aucune image est a supprimer je signal une erreur.
         if (!fileName) {
           res.status(401).json({ error });
