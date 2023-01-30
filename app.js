@@ -20,7 +20,6 @@ mongoose.set('strictQuery', true),
 
 // "express.json" analyse les requêtes "JSON" entrantes et place les données analysées dans le corp de la requête.
 app.use(express.json());
-app.use(helmet());
 
 // Réponse des en-têtes.
 app.use((req, res, next) => {
@@ -35,5 +34,6 @@ app.use(mongoSanitize({ replaceWith: '_' }));
 app.use('/api/sauces', sauceRoute);
 app.use('/api/auth', userRoute);
 app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use(helmet());
 
 module.exports = app;
