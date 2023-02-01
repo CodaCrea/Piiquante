@@ -4,14 +4,6 @@ const jsonWebToken = require('jsonwebtoken');
 
 exports.signup = async (req, res) => {
   try {
-    if (req.invalidEmail && req.invalidEmail == 1) {
-      const error = { message: "Invalid email" };
-      return res.status(401).json(error);
-    }
-    if (req.badPassword && req.badPassword == 1) {
-      const error = { message: "Invalid password" };
-      return res.status(401).json(error);
-    }
     // Je créé l'utilisateur en récupérant l'email inscrit dans le corp de la requête et son mot de passe que je hache avec "bcrypt" en 10 passages.
     const hash = await bcrypt.hash(req.body.password, 10);
     const user = new User({

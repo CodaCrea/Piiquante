@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const mongoSanitize = require('express-mongo-sanitize');
+// Helmet aide à sécuriser l'application Express en définissant divers en-têtes HTTP.
 const helmet = require('helmet');
 const sauceRoute = require('./routes/sauce');
 const userRoute = require('./routes/user');
@@ -25,7 +26,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   next();
 });
 

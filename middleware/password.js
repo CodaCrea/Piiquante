@@ -1,10 +1,10 @@
 const schema = require('../models/Password');
 
 module.exports = (req, res, next) => {
-  const error = { error: "Invalid password" };
   if (!schema.validate(req.body.password)) {
-    req.badPassword = 1;
+    const error = { error: "Invalid password" };
     res.status(401).json(error);
+  } else {
+    next();
   }
-  next();
 };

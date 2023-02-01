@@ -21,9 +21,9 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, callback) => {
     const name = file.originalname.split(' ').join('_');
-    const cleanName = name.split('.');
+    const cleanName = name.split('.')[0];
     const extension = MIME_TYPES[file.mimetype];
-    callback(null, cleanName[0] + Date.now() + '.' + extension);
+    callback(null, cleanName + Date.now() + '.' + extension);
   }
 });
 // "single()" crée un middleware qui capture les fichiers
