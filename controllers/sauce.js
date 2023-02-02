@@ -125,12 +125,14 @@ exports.modifySauce = async (req, res) => {
       {
         ...productObject, _id: req.params.id
       });
-    const fileName = sauceId.imageUrl.split('/images/')[1];
-    fs.unlink(`images/${fileName}`, (error) => {
-      if (error) {
-        throw error;
-      }
-    });
+    if (req.file) {
+      const fileName = sauceId.imageUrl.split('/images/')[1];
+      fs.unlink(`images/${fileName}`, (error) => {
+        if (error) {
+          throw error;
+        }
+      });
+    }
     // S'il y a un résultat je signal un succès.
     if (result) {
       res.status(200).json({ message: "modified sauce" });
